@@ -32,7 +32,6 @@
 #import "ENTHTTPClient.h"
 
 @interface ENUserStoreClient ()
-@property (nonatomic, strong) EDAMUserStoreClient * client;
 @property (nonatomic, strong) NSString * authenticationToken;
 @end
 
@@ -47,6 +46,7 @@
     self = [super init];
     if (self) {
         NSURL * url = [NSURL URLWithString:userStoreUrl];
+//        ENTHTTPClient * transport = [[ElephantHTTPClient alloc] initWithURL:url];
         ENTHTTPClient * transport = [[ENTHTTPClient alloc] initWithURL:url];
         ENTBinaryProtocol * protocol = [[ENTBinaryProtocol alloc] initWithTransport:transport];
         self.client = [[EDAMUserStoreClient alloc] initWithProtocol:protocol];

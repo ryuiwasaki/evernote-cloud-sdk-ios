@@ -469,11 +469,13 @@
            toProtocol:outProtocol];
     [outProtocol writeFieldEnd];
   }
+    
+    [outProtocol writeFieldStop];
+    [outProtocol writeStructEnd];
+    [outProtocol writeMessageEnd];
+    
+    [[outProtocol transport] flush];
   
-  [outProtocol writeFieldStop];
-  [outProtocol writeStructEnd];
-  [outProtocol writeMessageEnd];
-  [[outProtocol transport] flush];
 }
 
 @end

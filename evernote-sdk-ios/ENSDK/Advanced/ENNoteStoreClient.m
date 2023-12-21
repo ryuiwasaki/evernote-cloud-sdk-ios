@@ -115,6 +115,7 @@
     if (!_client) {
         NSString * noteStoreUrl = [self noteStoreUrl];
         NSURL * url = [NSURL URLWithString:noteStoreUrl];
+//        ENTHTTPClient * transport = [[ElephantHTTPClient alloc] initWithURL:url];
         ENTHTTPClient * transport = [[ENTHTTPClient alloc] initWithURL:url];
         ENTBinaryProtocol * protocol = [[ENTBinaryProtocol alloc] initWithTransport:transport];
         _client = [[EDAMNoteStoreClient alloc] initWithProtocol:protocol];

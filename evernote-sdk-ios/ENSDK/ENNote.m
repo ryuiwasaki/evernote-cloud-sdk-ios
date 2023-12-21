@@ -192,8 +192,17 @@
         // Prepare the array of any subresources present for the main archive.
         NSMutableArray * subresources = [[NSMutableArray alloc] init];
         for (EDAMResource * resource in edamResources) {
+            NSString *sourceStr;
+            if ([[resource attributes] sourceURL] && resource.attributes.fileName) {
+                sourceStr = [[[NSURL URLWithString:resource.attributes.sourceURL] URLByDeletingLastPathComponent] URLByAppendingPathComponent:resource.attributes.fileName].absoluteString;
+            } else if (resource.attributes.fileName) {
+                sourceStr = [[[NSURL URLWithString:@"http://example.com/"] URLByDeletingLastPathComponent] URLByAppendingPathComponent:resource.attributes.fileName].absoluteString;
+            } else {
+                sourceStr = @"";
+            }
+            
             ENWebResource * webResource = [[ENWebResource alloc] initWithData:resource.data.body
-                                                                          URL:[NSURL URLWithString:resource.attributes.sourceURL]
+                                                                          URL:[NSURL URLWithString:sourceStr]
                                                                      MIMEType:resource.mime
                                                              textEncodingName:nil
                                                                     frameName:nil];

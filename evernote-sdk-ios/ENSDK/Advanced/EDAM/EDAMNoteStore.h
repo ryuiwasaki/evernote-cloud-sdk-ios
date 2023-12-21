@@ -254,7 +254,7 @@ enum EDAMShareRelationshipPrivilegeLevel {
 @property (nonatomic, strong) EDAMNoteFilter * contextFilter;
 @end
 
-@interface EDAMSearchSuggestionResultSpec : FATObject 
+@interface EDAMSearchSuggestionResultSpec : FATObject
 @property (nonatomic, strong) NSNumber * maxTypeAheadSuggestions; // int32_t
 @end
 

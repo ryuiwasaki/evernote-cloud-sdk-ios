@@ -105,7 +105,7 @@ typedef void (^ENMLHTMLCompletionBlock)(NSString* html, NSError *error);
 
 - (void) parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName attributes:(NSDictionary *)attributeDict {
     if([elementName isEqualToString:ENMLTagNote]) {
-        [self.htmlWriter startElement:@"body"];
+        [self.htmlWriter startElement:@"body" attributes:attributeDict];
     }
     else if([elementName isEqualToString:ENMLTagTodo]) {
         self.shouldIgnoreNextEndElement = YES;
@@ -169,12 +169,17 @@ typedef void (^ENMLHTMLCompletionBlock)(NSString* html, NSError *error);
     
     NSMutableDictionary *scrubbedAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
     
-    if ([mime hasPrefix:@"image/"] == YES) {
+    if ([mime hasPrefix:@"image/"]) {
         [self writeImageTagForResource:resource
                         withAttributes:scrubbedAttributes];
-    }
-    else {
+        
+    } else {
+        
         // Ignoring all other resource types
+        
+        [self writeTag:@"embed"
+           forResource:resource
+        withAttributes:scrubbedAttributes];
     }
 }
 
@@ -186,8 +191,17 @@ typedef void (^ENMLHTMLCompletionBlock)(NSString* html, NSError *error);
     NSString *mime = [resource mime];
     NSString *sourceStr = nil;
     if (!self.shouldInlineResources) {
-        sourceStr = [[resource attributes] sourceURL];
+        
+        if ([[resource attributes] sourceURL] && resource.attributes.fileName) {
+            sourceStr = [[[NSURL URLWithString:resource.attributes.sourceURL] URLByDeletingLastPathComponent] URLByAppendingPathComponent:resource.attributes.fileName].absoluteString;
+        } else if (resource.attributes.fileName) {
+            
+            sourceStr = [[[NSURL URLWithString:@"http://example.com/"] URLByDeletingLastPathComponent] URLByAppendingPathComponent:resource.attributes.fileName].absoluteString;
+        }
+        
+//        sourceStr = [[[NSURL URLWithString:resource.attributes.sourceURL] URLByDeletingLastPathComponent] URLByAppendingPathComponent:resource.attributes.fileName].absoluteString;
     }
+    
     // Inline resource either if asked for, if if there WAS no source URL.
     if (!sourceStr) {
         NSString *resourceBodyBase64 = [[[resource data] body] base64EncodedStringWithOptions:0];
@@ -238,5 +252,61 @@ typedef void (^ENMLHTMLCompletionBlock)(NSString* html, NSError *error);
     [self.htmlWriter endElement];
 }
 
+- (void) writeTag:(nonnull NSString *)tag forResource:(nonnull EDAMResource *)resource
+                   withAttributes:(nullable NSDictionary *)attributes
+{
+    
+    NSMutableDictionary *tagAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
+    
+    NSString *mime = [resource mime];
+    
+    NSString *sourceStr = nil;
+    
+    if ([[resource attributes] sourceURL] && resource.attributes.fileName) {
+        sourceStr = [[[NSURL URLWithString:resource.attributes.sourceURL] URLByDeletingLastPathComponent] URLByAppendingPathComponent:resource.attributes.fileName].absoluteString;
+    } else if (resource.attributes.fileName) {
+        
+        sourceStr = [[[NSURL URLWithString:@"http://example.com/"] URLByDeletingLastPathComponent] URLByAppendingPathComponent:resource.attributes.fileName].absoluteString;
+    }
+    
+    // Inline resource either if asked for, if if there WAS no source URL.
+    if (!sourceStr) {
+        NSString *resourceBodyBase64 = [[[resource data] body] base64EncodedStringWithOptions:0];
+        sourceStr = [NSString stringWithFormat:@"data:%@;base64,%@",mime,resourceBodyBase64];
+    }
+    
+    [tagAttributes setObject:sourceStr
+                        forKey:@"src"];
+    if (mime == nil) {
+        mime = ENMIMETypeOctetStream;
+    }
+    
+    [tagAttributes setObject:mime
+                        forKey:@"type"];
+    
+    [tagAttributes setObject:mime
+                        forKey:ENHTMLAttributeMime];
+    
+    NSNumber *width = [attributes objectForKey:@"width"];
+    NSNumber *height = [attributes objectForKey:@"height"];
+    if (width == nil || height == nil) {
+        width = resource.width;
+        height = resource.height;
+    }
+    
+    if (width != nil) {
+        [tagAttributes setObject:@"100%"
+                            forKey:@"width"];
+    }
+    if (height != nil) {
+        [tagAttributes setObject:@"100%"
+                            forKey:@"height"];
+    }
+    
+    [tagAttributes setObject:@"controls" forKey:@"controls"];
+    
+    [self.htmlWriter startElement:tag attributes:tagAttributes];
+    [self.htmlWriter endElement];
+}
 
 @end

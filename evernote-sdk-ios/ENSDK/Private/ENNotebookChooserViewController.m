@@ -48,7 +48,7 @@
 @implementation ENNotebookChooserViewController
 
 - (id)init {
-    return [self initWithStyle:UITableViewStylePlain];
+    return [self initWithStyle: UITableViewStylePlain];
 }
 
 - (void)viewDidLoad

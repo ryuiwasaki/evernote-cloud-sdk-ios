@@ -34,7 +34,6 @@
 #import "RMSTokenView.h"
 #import "ENNotebookPickerView.h"
 #import "ENSDKPrivate.h"
-#import "ENSaveToEvernoteActivity.h"
 
 #define kTitleViewHeight        50.0
 #define kTagsViewHeight         44.0
@@ -154,8 +153,8 @@ CGFloat kTextLeftPadding = 20;
     [note generateWebArchiveData:^(NSData *data) {
         [self.noteView loadData:data
                       MIMEType:ENWebArchiveDataMIMEType
-              textEncodingName:nil
-                       baseURL:nil];
+              textEncodingName:@""
+                       baseURL:[NSURL new]];
     }];
 }
 

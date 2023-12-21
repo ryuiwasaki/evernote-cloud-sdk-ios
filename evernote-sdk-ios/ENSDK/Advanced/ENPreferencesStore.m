@@ -34,12 +34,14 @@ static NSString * ENPreferencesStoreFilename = @"com.evernote.evernote-sdk-ios.p
 @interface ENPreferencesStore ()
 @property (nonatomic, strong) NSString * pathname;
 @property (nonatomic, strong) NSMutableDictionary * store;
+
 @end
 
 @implementation ENPreferencesStore
 + (NSString *)pathnameForStoreFilename:(NSString *)filename
 {
     NSArray * paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
+    
     return [[paths[0] stringByAppendingPathComponent:@"Preferences"] stringByAppendingPathComponent:filename];
 }
 
@@ -65,6 +67,7 @@ static NSString * ENPreferencesStoreFilename = @"com.evernote.evernote-sdk-ios.p
 
 - (id)init
 {
+
     [NSException raise:NSInvalidArgumentException format:@"Must call -initWithStoreFilename:"];
     return nil;
 }

@@ -123,20 +123,20 @@ typedef void (^ProgressBlock)(NSUInteger bytesWritten, long long totalBytesWritt
     
     if (responseData == nil) {
         @throw [ENTTransportException exceptionWithName: @"TTransportException"
-                                               reason: @"Could not make HTTP request"
-                                                error: error];
+                                                 reason: @"Could not make HTTP request"
+                                                  error: error];
     }
     if (![response isKindOfClass: [NSHTTPURLResponse class]]) {
         @throw [ENTTransportException exceptionWithName: @"TTransportException"
-                                               reason: [NSString stringWithFormat: @"Unexpected NSURLResponse type: %@",
-                                                        NSStringFromClass([response class])]];
+                                                 reason: [NSString stringWithFormat: @"Unexpected NSURLResponse type: %@",
+                                                          NSStringFromClass([response class])]];
     }
     
     NSHTTPURLResponse * httpResponse = (NSHTTPURLResponse *) response;
     if ([httpResponse statusCode] != 200) {
         @throw [ENTTransportException exceptionWithName: @"TTransportException"
-                                               reason: [NSString stringWithFormat: @"Bad response from HTTP server: %ld",
-                                                        (long)[httpResponse statusCode]]];
+                                                 reason: [NSString stringWithFormat: @"Bad response from HTTP server: %ld",
+                                                          (long)[httpResponse statusCode]]];
     }
     
     self.responseData = responseData;
@@ -164,7 +164,7 @@ typedef void (^ProgressBlock)(NSUInteger bytesWritten, long long totalBytesWritt
 
 + (NSString *)createClientVersionString
 {
-	NSString * clientName = nil;
+    NSString * clientName = nil;
     NSString * locale = [NSString stringWithFormat: @"%@",
                          [[NSLocale currentLocale] objectForKey: NSLocaleCountryCode]];
     
@@ -178,6 +178,6 @@ typedef void (^ProgressBlock)(NSUInteger bytesWritten, long long totalBytesWritt
                   appName,
                   buildVersion,
                   locale];
-	return clientName;
+    return clientName;
 }
 @end

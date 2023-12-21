@@ -74,64 +74,117 @@
       self.url = url;
     }
 
-    NSString *docType = [webView stringByEvaluatingJavaScriptFromString:@"document.doctype.name"];
-    if ([docType isEqualToString:@"html"] == YES) {
-      BOOL success = [self clipContentsOfWebView:webView];
+    BOOL success = [self clipContentsOfWebView:webView];
       if (success == YES) {
-        return;
+          return;
       }
-    }
+      
+//    NSString *docType = [webView stringByEvaluatingJavaScriptFromString:@"document.doctype.name"];
+//    if ([docType isEqualToString:@"html"] == YES) {
+//      BOOL success = [self clipContentsOfWebView:webView];
+//      if (success == YES) {
+//        return;
+//      }
+//    }
   }
   
   if (url != nil) {
-    [NSURLConnection sendAsynchronousRequest:[NSURLRequest requestWithURL:url]
-                                       queue:[NSOperationQueue mainQueue]
-                           completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-                             if (data != nil) {
-                               NSString *textEncodingName = [response textEncodingName];
-                               if (textEncodingName == nil) {
-                                 NSString *mimeType = [response MIMEType];
-                                 if (mimeType == nil || [mimeType length] == 0) {
-                                   mimeType = ENMIMETypeOctetStream;
-                                 }
-
-                                   if ([mimeType isEqualToString:@"text/html"]) {
-                                       //XXX assumes utf8 for now. look in <meta> tag?
-                                       NSString *htmlString = [[NSString alloc] initWithData:data
-                                                                                    encoding:NSUTF8StringEncoding];
-                                       if (htmlString != nil) {
-                                           [self createNoteFromContents:htmlString
-                                                                  title:nil
-                                                               mimeType:mimeType
-                                                              sourceURL:url];
-                                           return;
-                                       }
-                                   }
-                                   
-                                 [self createNoteFromContents:data
-                                                        title:nil
-                                                     mimeType:mimeType
-                                                    sourceURL:url];
-                                 return;
-                               }
-                               else {
-                                 CFStringEncoding cfEncoding = CFStringConvertIANACharSetNameToEncoding((CFStringRef)textEncodingName);
-                                 NSStringEncoding encoding = CFStringConvertEncodingToNSStringEncoding(cfEncoding);
-                                 
-                                 NSString *htmlString = [[NSString alloc] initWithData:data
-                                                                              encoding:encoding];
-                                 if (htmlString != nil) {
-                                   [self createNoteFromContents:htmlString
-                                                          title:nil
-                                                       mimeType:nil
-                                                      sourceURL:url];
-                                   return;
-                                 }
-                               }
-                             }
-                             
-                             [self completeWithNote:nil];
-                           }];
+    [[NSURLSession sharedSession] dataTaskWithRequest:[NSURLRequest requestWithURL:url] completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        
+        if (data != nil) {
+            NSString *textEncodingName = [response textEncodingName];
+            if (textEncodingName == nil) {
+                NSString *mimeType = [response MIMEType];
+                if (mimeType == nil || [mimeType length] == 0) {
+                    mimeType = ENMIMETypeOctetStream;
+                }
+                
+                if ([mimeType isEqualToString:@"text/html"]) {
+                    //XXX assumes utf8 for now. look in <meta> tag?
+                    NSString *htmlString = [[NSString alloc] initWithData:data
+                                                                 encoding:NSUTF8StringEncoding];
+                    if (htmlString != nil) {
+                        [self createNoteFromContents:htmlString
+                                               title:nil
+                                            mimeType:mimeType
+                                           sourceURL:url];
+                        return;
+                    }
+                }
+                
+                [self createNoteFromContents:data
+                                       title:nil
+                                    mimeType:mimeType
+                                   sourceURL:url];
+                return;
+            }
+            else {
+                CFStringEncoding cfEncoding = CFStringConvertIANACharSetNameToEncoding((CFStringRef)textEncodingName);
+                NSStringEncoding encoding = CFStringConvertEncodingToNSStringEncoding(cfEncoding);
+                
+                NSString *htmlString = [[NSString alloc] initWithData:data
+                                                             encoding:encoding];
+                if (htmlString != nil) {
+                    [self createNoteFromContents:htmlString
+                                           title:nil
+                                        mimeType:nil
+                                       sourceURL:url];
+                    return;
+                }
+            }
+        }
+        
+        [self completeWithNote:nil];
+    }];
+      
+//    [NSURLConnection sendAsynchronousRequest:[NSURLRequest requestWithURL:url]
+//                                       queue:[NSOperationQueue mainQueue]
+//                           completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+//                             if (data != nil) {
+//                               NSString *textEncodingName = [response textEncodingName];
+//                               if (textEncodingName == nil) {
+//                                 NSString *mimeType = [response MIMEType];
+//                                 if (mimeType == nil || [mimeType length] == 0) {
+//                                   mimeType = ENMIMETypeOctetStream;
+//                                 }
+//
+//                                   if ([mimeType isEqualToString:@"text/html"]) {
+//                                       //XXX assumes utf8 for now. look in <meta> tag?
+//                                       NSString *htmlString = [[NSString alloc] initWithData:data
+//                                                                                    encoding:NSUTF8StringEncoding];
+//                                       if (htmlString != nil) {
+//                                           [self createNoteFromContents:htmlString
+//                                                                  title:nil
+//                                                               mimeType:mimeType
+//                                                              sourceURL:url];
+//                                           return;
+//                                       }
+//                                   }
+//                                   
+//                                 [self createNoteFromContents:data
+//                                                        title:nil
+//                                                     mimeType:mimeType
+//                                                    sourceURL:url];
+//                                 return;
+//                               }
+//                               else {
+//                                 CFStringEncoding cfEncoding = CFStringConvertIANACharSetNameToEncoding((CFStringRef)textEncodingName);
+//                                 NSStringEncoding encoding = CFStringConvertEncodingToNSStringEncoding(cfEncoding);
+//                                 
+//                                 NSString *htmlString = [[NSString alloc] initWithData:data
+//                                                                              encoding:encoding];
+//                                 if (htmlString != nil) {
+//                                   [self createNoteFromContents:htmlString
+//                                                          title:nil
+//                                                       mimeType:nil
+//                                                      sourceURL:url];
+//                                   return;
+//                                 }
+//                               }
+//                             }
+//                             
+//                             [self completeWithNote:nil];
+//                           }];
     return;
   }
   

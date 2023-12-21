@@ -252,7 +252,11 @@ static BOOL GCOAuthUseHTTPSCookieStorage = YES;
     oauth.requestParameters = parameters;
     
     // create url
-    NSString *encodedPath = [path stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+//    NSString *encodedPath = [path stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    
+    NSMutableCharacterSet *mCharacterSet = [NSMutableCharacterSet alphanumericCharacterSet];
+    [mCharacterSet addCharactersInString:@"!*'\"();:@&=+$,/?%#[]% "];
+    NSString *encodedPath = [path stringByAddingPercentEncodingWithAllowedCharacters:mCharacterSet];
     NSString *URLString = [NSString stringWithFormat:@"%@://%@%@", scheme, host, encodedPath];
     if ([oauth.requestParameters count]) {
         NSString *query = [ENGCOAuth queryStringFromParameters:oauth.requestParameters];
@@ -283,8 +287,12 @@ static BOOL GCOAuthUseHTTPSCookieStorage = YES;
                                               tokenSecret:tokenSecret];
     oauth.HTTPMethod = @"POST";
     oauth.requestParameters = parameters;
-    NSURL *URL = [[NSURL alloc] initWithScheme:@"https" host:host path:path];
-    oauth.URL = URL;
+    NSURLComponents *comps = [[NSURLComponents alloc] init];
+    comps.scheme = @"https";
+    comps.host = host;
+    comps.path = path;
+//    NSURL *URL = [[NSURL alloc] initWithScheme:@"https" host:host path:path];
+//    oauth.URL = comps.URL;
     
     // create request
     NSMutableURLRequest *request = [oauth request];
@@ -305,11 +313,15 @@ static BOOL GCOAuthUseHTTPSCookieStorage = YES;
 @end
 @implementation NSString (GCOAuthAdditions)
 - (NSString *)pcen {
+    
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     CFStringRef string = CFURLCreateStringByAddingPercentEscapes(NULL,
                                                                  (CFStringRef)self,
                                                                  NULL,
                                                                  CFSTR("!*'();:@&=+$,/?%#[]"),
                                                                  kCFStringEncodingUTF8);
+#pragma clang diagnostic pop
     return CFBridgingRelease(string);
 }
 @end

@@ -1564,7 +1564,10 @@ static BOOL disableRefreshingNotebooksCacheOnLaunch;
         
         NSURLResponse * response = nil;
         NSError * error = nil;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         NSData * thumbnailData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
+#pragma clang diagnostic pop
         UIImage * thumbnail = nil;
         if (!thumbnailData) {
             ENSDKLogError(@"Failed to get thumb data at url %@", urlString);
@@ -1665,13 +1668,16 @@ static BOOL disableRefreshingNotebooksCacheOnLaunch;
 
 - (EDAMAuthenticationResult *)validBusinessAuthenticationResult
 {
-    NSAssert(![NSThread isMainThread], @"Cannot authenticate to business on main thread");
     EDAMAuthenticationResult * auth = [self.authCache authenticationResultForBusiness];
     if (!auth) {
-        auth = [self.userStore authenticateToBusiness];
+        NSAssert(![NSThread isMainThread], @"Cannot authenticate to business on main thread");
+        auth = [ [ENUserStoreClient userStoreClientWithUrl:self.userStoreUrl authenticationToken:self.primaryAuthenticationToken] authenticateToBusiness];
         [self.authCache setAuthenticationResultForBusiness:auth];
         self.businessUser = auth.user;
-        [self.preferences encodeObject:self.businessUser forKey:ENSessionPreferencesBusinessUser];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.preferences encodeObject:self.businessUser forKey:ENSessionPreferencesBusinessUser];
+        });
+        
     }
     return auth;
 }
@@ -1851,7 +1857,6 @@ static BOOL disableRefreshingNotebooksCacheOnLaunch;
 
 - (NSString *)authenticationTokenForLinkedNotebookRef:(ENLinkedNotebookRef *)linkedNotebookRef
 {
-    NSAssert(![NSThread isMainThread], @"Cannot authenticate to linked notebook on main thread");
     
     // use nil token for joined public notebook
     if (linkedNotebookRef.sharedNotebookGlobalId == nil) {
@@ -1861,6 +1866,7 @@ static BOOL disableRefreshingNotebooksCacheOnLaunch;
     // See if we have auth data already for this notebook.
     EDAMAuthenticationResult * auth = [self.authCache authenticationResultForLinkedNotebookGuid:linkedNotebookRef.guid];
     if (!auth) {
+        NSAssert(![NSThread isMainThread], @"Cannot authenticate to linked notebook on main thread");
         // Create a temporary note store client for the linked note store, with our primary auth token,
         // in order to authenticate to the shared notebook.
         ENNoteStoreClient * linkedNoteStore = [ENNoteStoreClient noteStoreClientWithUrl:linkedNotebookRef.noteStoreUrl authenticationToken:self.primaryAuthenticationToken];
@@ -1937,7 +1943,7 @@ static BOOL disableRefreshingNotebooksCacheOnLaunch;
 @implementation ENSessionDefaultLogger
 - (void)evernoteLogInfoString:(NSString *)str;
 {
-    NSLog(@"ENSDK: %@", str);
+//    NSLog(@"ENSDK: %@", str);
 }
 
 - (void)evernoteLogErrorString:(NSString *)str;

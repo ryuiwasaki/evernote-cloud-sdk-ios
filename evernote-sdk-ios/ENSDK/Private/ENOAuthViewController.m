@@ -28,12 +28,13 @@
 
 #import "ENOAuthViewController.h"
 #import "ENSDKPrivate.h"
+#import <WebKit/WebKit.h>
 
-@interface ENOAuthViewController() <UIWebViewDelegate>
+@interface ENOAuthViewController() <UIWebViewDelegate, WKNavigationDelegate>
 
 @property (nonatomic, strong) NSURL *authorizationURL;
 @property (nonatomic, strong) NSString *oauthCallbackPrefix;
-@property (nonatomic, strong) UIWebView *webView;
+@property (nonatomic, strong) WKWebView *webView;
 @property (nonatomic, copy) NSString* currentProfileName;
 @property (nonatomic, strong) UIActivityIndicatorView* activityIndicator;
 @property (nonatomic, assign) BOOL isSwitchingAllowed;
@@ -50,7 +51,7 @@
 - (void)dealloc
 {
     self.delegate = nil;
-    self.webView.delegate = nil;
+    self.webView.navigationDelegate = nil;
     [self.webView stopLoading];
 }
 
@@ -85,10 +86,13 @@
     self.activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
     [self.activityIndicator setHidesWhenStopped:YES];
     
-    self.webView = [[UIWebView alloc] initWithFrame:self.view.bounds];
+    self.webView = [[WKWebView alloc] initWithFrame: self.view.bounds configuration: [[WKWebViewConfiguration alloc] init]];
+    
+//    self.webView = [[UIWebView alloc] initWithFrame:self.view.bounds];
     self.webView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    self.webView.scalesPageToFit = YES;
-    self.webView.delegate = self;
+//    self.webView.scalesPageToFit = YES;
+    self.webView.navigationDelegate = self;
+
     [self.view addSubview:self.webView];
     self.activityIndicator.frame = CGRectMake((self.navigationController.view.frame.size.width - (self.activityIndicator.frame.size.width/2))/2,
                                               (self.navigationController.view.frame.size.height - (self.activityIndicator.frame.size.height/2) - 44)/2,
@@ -119,9 +123,14 @@
     [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft
                            forView:[[self navigationController] view]
                              cache:YES];
-    [self.webView setDelegate:nil];
+//    [self.webView setDelegate:nil];
+    self.webView.navigationDelegate = nil;
     // Blank out the web view
-    [self.webView stringByEvaluatingJavaScriptFromString:@"document.open();document.close()"];
+
+    [self.webView evaluateJavaScript: @"document.open();document.close()" completionHandler: ^(id _Nullable value, NSError * _Nullable error) {
+        
+    }];
+//    [self.webView stringByEvaluatingJavaScriptFromString:@"document.open();document.close()"];
     self.navigationItem.leftBarButtonItem = nil;
     [UIView commitAnimations];
 }
@@ -150,19 +159,76 @@
 
 - (void)loadWebView {
     [self.activityIndicator startAnimating];
-    [self.webView setDelegate:self];
+//    [self.webView setDelegate:self];
+    self.webView.navigationDelegate = self;
     [self.webView loadRequest:[NSURLRequest requestWithURL:self.authorizationURL]];
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
     return YES;
 }
+#pragma clang diagnostic pop
 
 # pragma mark - UIWebViewDelegate
 
-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
-{
+//- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
+//{
+//    [self.activityIndicator stopAnimating];
+//    if ([error.domain isEqualToString:@"WebKitErrorDomain"] && error.code == 102) {
+//        // ignore "Frame load interrupted" errors, which we get as part of the final oauth callback :P
+//        return;
+//    }
+//
+//    if (error.code == NSURLErrorCancelled) {
+//        // ignore rapid repeated clicking (error code -999)
+//        return;
+//    }
+//
+//    [self.webView stopLoading];
+//
+//    if (self.delegate) {
+//        [self.delegate oauthViewController:self didFailWithError:error];
+//    }
+//}
+
+//- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType
+//{
+//    if ([[request.URL absoluteString] hasPrefix:self.oauthCallbackPrefix]) {
+//        // this is our OAuth callback prefix, so let the delegate handle it
+//        if (self.delegate) {
+//            [self.delegate oauthViewController:self receivedOAuthCallbackURL:request.URL];
+//        }
+//        return NO;
+//    }
+//    return YES;
+//}
+//
+//- (void)webViewDidFinishLoad:(UIWebView *)webView {
+//    [self.activityIndicator stopAnimating];
+//}
+
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    NSURL    *url       = navigationAction.request.URL;
+
+    if ([[url absoluteString] hasPrefix:self.oauthCallbackPrefix]) {
+        // this is our OAuth callback prefix, so let the delegate handle it
+        if (self.delegate) {
+            [self.delegate oauthViewController:self receivedOAuthCallbackURL: url];
+        }
+        decisionHandler(WKNavigationActionPolicyCancel);
+        return;
+    }
+    
+    decisionHandler(WKNavigationActionPolicyAllow);
+    
+}
+
+- (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error {
+    
     [self.activityIndicator stopAnimating];
     if ([error.domain isEqualToString:@"WebKitErrorDomain"] && error.code == 102) {
         // ignore "Frame load interrupted" errors, which we get as part of the final oauth callback :P
@@ -181,20 +247,7 @@
     }
 }
 
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType
-{
-    if ([[request.URL absoluteString] hasPrefix:self.oauthCallbackPrefix]) {
-        // this is our OAuth callback prefix, so let the delegate handle it
-        if (self.delegate) {
-            [self.delegate oauthViewController:self receivedOAuthCallbackURL:request.URL];
-        }
-        return NO;
-    }
-    return YES;
-}
-
-- (void)webViewDidFinishLoad:(UIWebView *)webView {
+-(void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
     [self.activityIndicator stopAnimating];
 }
-
 @end

@@ -31,18 +31,25 @@
 @implementation NSString (URLEncoding)
 - (NSString *)en_stringByUrlEncoding
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     return (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(NULL,
                                                                                  (CFStringRef)self,
                                                                                  NULL,
                                                                                  (CFStringRef)@"!*'\"();:@&=+$,/?%#[]% ",
                                                                                  kCFStringEncodingUTF8));
+#pragma clang diagnostic pop
+//    NSMutableCharacterSet *mCharacterSet = [NSMutableCharacterSet new];
+//    [mCharacterSet addCharactersInString:@"!*'\"();:@&=+$,/?%#[]% "];
+//    return [self stringByAddingPercentEncodingWithAllowedCharacters:mCharacterSet];
 }
 
 - (NSString *)en_stringByUrlDecoding
 {
-	return (NSString *)CFBridgingRelease(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault,
-                                                                                                 (CFStringRef)self,
-                                                                                                 CFSTR(""),
-                                                                                                 kCFStringEncodingUTF8));
+//	return (NSString *)CFBridgingRelease(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault,
+//                                                                                                 (CFStringRef)self,
+//                                                                                                 CFSTR(""),
+//                                                                                                 kCFStringEncodingUTF8));
+    return [self stringByRemovingPercentEncoding];
 }
 @end

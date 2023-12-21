@@ -70,7 +70,7 @@
  * it is used by the sample UIActivity to track recently-used notebook destinations, which are of course
  * session-specific. If you use it, please namespace your keys appropriately to avoid collisions.
  */
-@property (nonatomic, readonly) ENPreferencesStore * preferences;
+@property (nonatomic, strong) ENPreferencesStore * preferences;
 
 /**
  *  Primary authentication token for the user, can be used to fetch personal notes and authenticate 

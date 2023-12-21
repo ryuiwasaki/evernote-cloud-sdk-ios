@@ -84,7 +84,7 @@
 @property (nonatomic, readonly) BOOL isJoinedPublic;
 
 /**
- *  A flag indicating whether this notebook exists in the user's business.
+ *  A flag indicating whether this notebook  in the user's business.
  */
 @property (nonatomic, readonly) BOOL isBusinessNotebook;
 

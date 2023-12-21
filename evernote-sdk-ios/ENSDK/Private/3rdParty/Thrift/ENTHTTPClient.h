@@ -32,3 +32,16 @@
 
 @end
 
+//@interface ENTHTTPClient (PrivateHack)
+//
+//// Evernote Hack
+//- (NSMutableURLRequest *) newRequest;
+//+ (NSString *)createClientVersionString;
+//
+//@property (strong, nonatomic) NSMutableData *requestData;
+//@property (strong, nonatomic) NSData *responseData;
+//@property (assign, nonatomic) int responseDataOffset;
+//@property (strong, nonatomic) NSString *userAgent;
+//@property (assign, nonatomic) int timeout;
+//
+//@end

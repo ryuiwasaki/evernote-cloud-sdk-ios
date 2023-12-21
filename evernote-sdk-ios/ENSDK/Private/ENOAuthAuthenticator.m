@@ -172,8 +172,11 @@ NSString * ENOAuthAuthenticatorAuthInfoAppNotebookIsLinked = @"ENOAuthAuthentica
                                                    consumerSecret:self.consumerSecret
                                                       accessToken:nil
                                                       tokenSecret:nil];
-    
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     NSURLConnection * connection = [NSURLConnection connectionWithRequest:tempTokenRequest delegate:self];
+#pragma clang diagnostic pop
+
     if (!connection) {
         // can't make connection, so immediately fail.
         [self completeAuthenticationWithError:[ENError connectionFailedError]];
@@ -409,13 +412,17 @@ NSString * ENOAuthAuthenticatorAuthInfoAppNotebookIsLinked = @"ENOAuthAuthentica
             self.isMultitaskLoginDisabled==NO) {
             self.state = ENOAuthAuthenticatorStateInProgress;
             NSString* openURL = [NSString stringWithFormat:@"en://link-sdk/consumerKey/%@/profileName/%@/authorization/%@",self.consumerKey,self.currentProfile,parameters[@"oauth_token"]];
-            BOOL success = [[UIApplication sharedApplication] openURL:[NSURL URLWithString:openURL]];
-            if(success == NO) {
-                // The Evernote app does not support the full URL, falling back
-                self.isMultitaskLoginDisabled = YES;
-                // Restart oAuth dance
-                [self startOauthAuthentication];
-            }
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:openURL] options:@{} completionHandler:^(BOOL success) {
+                
+                if(success == NO) {
+                    // The Evernote app does not support the full URL, falling back
+                    self.isMultitaskLoginDisabled = YES;
+                    // Restart oAuth dance
+                    [self startOauthAuthentication];
+                }
+            }];
+//            BOOL success = [[UIApplication sharedApplication] openURL:[NSURL URLWithString:openURL]];
+            
         }
         else {
             // Open a modal ENOAuthViewController on top of our given view controller,
@@ -703,7 +710,11 @@ NSString * ENOAuthAuthenticatorAuthInfoAppNotebookIsLinked = @"ENOAuthAuthentica
                                                    consumerSecret:self.consumerSecret
                                                       accessToken:oauthToken
                                                       tokenSecret:self.tokenSecret];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     NSURLConnection * connection = [NSURLConnection connectionWithRequest:authTokenRequest delegate:self];
+#pragma clang diagnostic pop
+
     if (!connection) {
         // can't make connection, so immediately fail.
         [self completeAuthenticationWithError:[ENError connectionFailedError]];

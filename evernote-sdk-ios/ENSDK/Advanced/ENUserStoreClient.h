@@ -31,6 +31,7 @@
 
 @interface ENUserStoreClient : ENStoreClient
 
+@property (nonatomic, strong) EDAMUserStoreClient * client;
 // ! DO NOT INSTANTIATE THIS OBJECT DIRECTLY. GET ONE FROM AN AUTHENTICATED ENSESSION !
 
 ///---------------------------------------------------------------------------------------

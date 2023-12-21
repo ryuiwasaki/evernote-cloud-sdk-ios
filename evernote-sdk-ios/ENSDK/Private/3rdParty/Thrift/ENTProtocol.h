@@ -144,7 +144,7 @@ enum {
 
 @interface ENTProtocolException : ENTException
 @end
-
+@class FATField;
 @interface ENTProtocolUtil : NSObject
 
 + (void) skipType: (int) type onProtocol: (id <ENTProtocol>) protocol;
@@ -163,4 +163,7 @@ enum {
           toProtocol:(id<ENTProtocol>)outProtocol
         withArgPairs:(NSArray *)argPairs;
 
++ (void) _writeValue:(id)fieldValue
+            forField:(FATField *)field
+          toProtocol:(id<ENTProtocol>)outProtocol;
 @end

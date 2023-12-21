@@ -31,7 +31,6 @@
 #import "ENXMLDTD.h"
 #import "ENXMLUtils.h"
 
-#import <libxml/tree.h>
 #include <libxml/HTMLtree.h>
 #include <unistd.h>
 
@@ -392,8 +391,11 @@ static xmlEntityPtr getEntitySAXCallback (void * ctx,
   _parserHalted = NO;
   
   @autoreleasepool {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     _urlConnection = [[NSURLConnection alloc] initWithRequest:request
                                                      delegate:self];
+#pragma clang diagnostic pop
     
     if (_urlConnection == nil) {
       return NO;
